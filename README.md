@@ -49,3 +49,18 @@ antes de las 3:00 p. m.**: no se presenta nada que no esté en GitHub.
 | [`test-manager-library-3413974-page`](https://github.com/code-sena/test-manager-library-3413974-page) | Sitio público estático de presentación |
 | [`test-manager-library-3413974-infra`](https://github.com/code-sena/test-manager-library-3413974-infra) | Contenedores, red, volúmenes y motor de base de datos vacío |
 | [`test-manager-library-3413974-tool`](https://github.com/code-sena/test-manager-library-3413974-tool) | Utilidades: sembrador de datos de demostración |
+
+## Sembrador de demostración
+
+`seed.mjs` crea los datos exclusivamente mediante la API autenticada: 40 libros, 10 socios y 15 préstamos, incluidos 3 vencidos. Requiere Node.js 22 (usa `fetch` nativo, sin dependencias) y una API ya migrada y accesible.
+
+En PowerShell, configura las variables localmente con las credenciales del administrador definidas en el `.env` ignorado de `infra` y ejecuta:
+
+```powershell
+$env:API_BASE_URL = 'http://localhost:8000/api/v1/'
+$env:ADMIN_USERNAME = '<administrador local>'
+$env:ADMIN_PASSWORD = '<contraseña local>'
+node .\seed.mjs
+```
+
+El proceso usa un identificador aleatorio por ejecución para no colisionar con registros anteriores. Guarda ese `run_id` del mensaje de error para repetir una ejecución interrumpida con `$env:SEED_RUN_ID = '<run_id>'`; libros, socios y préstamos de ese lote se detectan antes de crear nuevos. Las fechas de los tres préstamos vencidos se controlan con `X-Test-Time`; la API solo atiende ese encabezado en solicitudes autenticadas de entornos `local`/`testing`. Las solicitudes normales siguen usando el reloj del sistema. El resultado informa cuántas líneas vencidas del lote aparecen en el endpoint, cuántas filas reporta la API y el progreso en caso de error. No guarda credenciales ni tokens.
